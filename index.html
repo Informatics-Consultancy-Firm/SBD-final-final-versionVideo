@@ -1457,57 +1457,32 @@
     function openModuleSubTab(id, tab) {
         const el = document.getElementById('mod-' + id);
         if (!el) return;
+        
         // Update active tab buttons
         el.querySelectorAll('.mod-subtab').forEach(b => b.classList.remove('active'));
         const btn = el.querySelector('.mod-subtab[data-tab="'+tab+'"]');
         if (btn) btn.classList.add('active');
-
+    
         const body = document.getElementById('mod-body-' + id);
         if (!body) return;
         const mod = MODULES.find(m => m.id === id);
-        const res = MODULE_RESOURCES[id] || {};
-
-        if (tab === 'tool') {
+        const videoSrc = MODULE_RESOURCES[id]?.video || '';
+        
+        // JUST VIDEO - no if/else, no tool, no ppt
+        if (videoSrc) {
             body.innerHTML = `
-              <div class="module-loading" id="mod-loading-${id}" style="display:flex;">
-                <div class="module-spinner"></div>
-                <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#607080;">Loading ${mod?.label}…</div>
-              </div>
-              <iframe class="module-iframe" id="mod-frame-${id}" src=""
-                style="display:none;width:100%;height:100%;border:none;"
-                onload="document.getElementById('mod-loading-${id}').style.display='none';this.style.display='block';"
-                onerror="document.getElementById('mod-loading-${id}').innerHTML='<div style=\'text-align:center;padding:30px;\'>⚠ Could not load module.</div>';">
-              </iframe>`;
-            const frame = document.getElementById('mod-frame-' + id);
-            if (frame && !frame.src.includes(mod.file)) {
-                setTimeout(() => { frame.src = mod.file; }, 50);
-            }
-        } else if (tab === 'video') {
-            const src = res.video || '';
-            body.innerHTML = src
-                ? `<div style="padding:16px;height:100%;display:flex;flex-direction:column;gap:12px;">
-                    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:#004080;letter-spacing:.5px;text-transform:uppercase;">📹 Training Video</div>
-                    <video controls style="width:100%;border-radius:10px;border:2px solid #dde3ee;flex:1;background:#000;">
-                      <source src="${src}" type="video/mp4">Your browser does not support video.
+                <div style="padding:16px;height:100%;display:flex;flex-direction:column;background:#000;">
+                    <video controls autoplay style="width:100%;height:100%;object-fit:contain;" playsinline>
+                        <source src="${videoSrc}" type="video/mp4">
+                        Your browser does not support video playback.
                     </video>
-                   </div>`
-                : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:30px;text-align:center;">
-                    <div style="width:64px;height:64px;background:#f0f4f8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;">🎬</div>
-                    <div style="font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;color:#004080;">No Video Available</div>
-                    <div style="font-size:12px;color:#888;">Upload a training video for this module.</div>
-                   </div>`;
-        } else if (tab === 'ppt') {
-            const src = res.ppt || '';
-            body.innerHTML = src
-                ? `<div style="padding:16px;height:100%;display:flex;flex-direction:column;gap:12px;">
-                    <div style="font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;color:#004080;letter-spacing:.5px;text-transform:uppercase;">📊 Presentation / PDF</div>
-                    <iframe src="${src}" style="width:100%;flex:1;border-radius:10px;border:2px solid #dde3ee;" allowfullscreen></iframe>
-                   </div>`
-                : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:30px;text-align:center;">
-                    <div style="width:64px;height:64px;background:#f0f4f8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;">📊</div>
-                    <div style="font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;color:#004080;">No Presentation Available</div>
-                    <div style="font-size:12px;color:#888;">Upload a PDF or PowerPoint for this module.</div>
-                   </div>`;
+                </div>`;
+        } else {
+            body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:30px;text-align:center;background:#f0f4f8;">
+                <div style="width:64px;height:64px;background:#f0f4f8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;">🎬</div>
+                <div style="font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;color:#004080;">No Video Available</div>
+                <div style="font-size:12px;color:#888;">Add video path in MODULE_RESOURCES.${id}.video</div>
+            </div>`;
         }
     }
 
@@ -1522,15 +1497,15 @@
             el.dataset.built = '1';
             el.innerHTML = `
               <div class="module-topbar" style="background:linear-gradient(135deg,${mod.dark},${mod.color});">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="20" height="20" style="flex-shrink:0"><path d="${mod.icon}"/></svg>
-                <div class="module-title">${mod.label}</div>
-                <div style="display:flex;gap:6px;align-items:center;margin-left:auto;">
-                  <button class="module-close" onclick="closeModule('${id}')">
-                    <svg viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>CLOSE
-                  </button>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="20" height="20" style="flex-shrink:0"><path d="${mod.icon}"/></svg>
+                    <div class="module-title">${mod.label}</div>
+                    <div style="display:flex;gap:6px;align-items:center;margin-left:auto;">
+                        <button class="module-close" onclick="closeModule('${id}')">
+                            <svg viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>CLOSE
+                        </button>
+                    </div>
                 </div>
-              </div>
-              <div id="mod-body-${id}" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+              <div id="mod-body-${id}" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"></div>
                 <div class="module-loading" id="mod-loading-${id}">
                   <div class="module-spinner"></div>
                   <div style="font-family:'Oswald',sans-serif;font-size:13px;color:#607080;letter-spacing:.5px;">Loading ${mod.label}…</div>
